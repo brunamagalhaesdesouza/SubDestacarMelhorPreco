@@ -1,0 +1,116 @@
+Sub DestacarMelhorPreço()
+'Define o início de uma sub(procedimento), chamada DestacarMelhorPreço.
+'Subs são blocos de código VBA, que podem ser chamados para realizar uma
+'tarefa específica.
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    'Dim ws As Worksheet: declara a varíável chamada ws,  que vai ser usada para fazer
+    'referência à planilha do Excel onde estão localizados os dados.
+    'Dim lastRow As Long: esta variável vai ser usada para armazenar o número da última
+    'linha com dados na coluna F (coluna referente ao valor em dólar).
+    'Dim i As Long: a variável i vai ser usada como um contador de loop, que vai percorrer
+    'as linhas da planilha.
+    
+    ' Defina a planilha onde os dados estão
+    On Error Resume Next
+    'Ativa o tratamento de erro.
+    Set ws = ThisWorkbook.Sheets("Dados")
+    'Esta linha define a variável ws para indicar para a planilha de nome Dados.
+    On Error GoTo 0
+    'Limpa o tratamento de erro.
+    
+    If ws Is Nothing Then
+        MsgBox "Planilha 'Planilha1' não encontrada!", vbExclamation
+        Exit Sub
+    End If
+    'Aqui verificamos se a planilha foi encontrada. Se não, o código exibe uma
+    'caixa de mensagem indicando o erro.
+ 
+    lastRow = ws.Cells(ws.Rows.Count, "F").End(xlUp).Row
+    'Encontra a última linha com dados na coluna F (coluna referente ao valor em dólar),
+    'usando, para isso, a função End(xlUp), que vai percorrer a coluna de baixo para cima.
+
+    For i = 2 To lastRow
+    'Loop que percorre as linhas com dados, começando a partir da segunda linha (pois assume
+    'que a primeira é o header).
+        On Error Resume Next
+        'Ativamos um novo tratamento de erro.
+        
+        Dim valorDolar As Double
+        Dim valorLibra As Double
+        valorDolar = ws.Cells(i, 6).Value
+        valorLibra = ws.Cells(i, 7).Value
+        'valorDolar e valorLibra declaram duas variáveis que armazenarão os valores em dólar e
+        'libra, respectivamente.
+        'valorDolar = ws.Cells(i, 6).Value: essa linha atribui, à variável valorDolar, o valor
+        'da célula na coluna F (coluna 6), da linha atual do loop (linha i), na planilha.
+        'valorLibra = ws.Cells(i, 7).Value: do mesmo modo que com valorDolar, esta linha atribui,
+        'à variável valorLibra, o valor da célula na coluna G (coluna 7), da linha atual do loop,
+        '(linha i), na planilha.
+        
+        If Err.Number <> 0 Then
+            'Aqui, verificamos se ocorreu um erro ao obter os valores. O tratamento de erro funciona da
+            'seguinte maneira: o Err. number contém o número zero. Desta forma, se ele for diferente de
+            'de zero, significa que ocorreu um erro.
+            ws.Cells(i, 8).Interior.Color = RGB(255, 0, 0)
+            'O código dentro do if, por sua vez, só vai ser executado se um erro acontecer. Neste caso,
+            ' a célula na coluna H, da linha atual, será destacada de vermelho, indicando que ocorreu
+            'erro na obtenção dos valores.
+            Err.Clear
+            'Usa-se o Err. Clear para limpar o objeto Err. Isso é importante porque, depois que lidamos
+            'com o erro, é necessário garantir que não haja resquício do erro anterior, quando o código
+            'continuar a ser executado sem erro.
+        Else
+            'Por fim, se não houver erro (caso contrário, teria caído no bloco If), o código continua com
+            'o processamento normal dos valores nas colunas F e G, como apontado no bloco Else.
+
+            Dim taxaCambioDolar As Double
+            Dim taxaCambioLibra As Double
+            taxaCambioDolar = 5
+            taxaCambioLibra = 6
+            'taxaCambioDolar e taxaCambioLibra são as variáveis que representam as taxas de câmbio
+            'para dólar e libra.
+            Dim valorRealDolar As Double
+            Dim valorRealLibra As Double
+            valorRealDolar = valorDolar * taxaCambioDolar
+            valorRealLibra = valorLibra * taxaCambioLibra
+            'as variáveis valorRealDolar e valorRealLibra são calculadas multiplicando os valores
+            'em dólar e libra pelas taxas de câmbio correspondentes.
+
+            Dim valorMaisBaixo As Double
+            'Dim valorMaisBaixo As Double: essa variável vai armazenar o valor convertido mais
+            'baixo entre dólar e libra.
+            If valorRealDolar < valorRealLibra Then
+                valorMaisBaixo = valorRealDolar
+            Else
+                valorMaisBaixo = valorRealLibra
+            End If
+            'Aqui, utilizamos uma condicional if...else para comparar os valores em real
+            'com relação ao dólar e a libra. Se valorRealDolar for menor que valorRealLibra,
+            'significa que o dólar é mais vantajoso que a libra. Sendo assim, a variável
+            'valorMaisBaixo recebe o valor da variável valorRealDolar. Caso contrário, se
+            'valorRealLibra for menor que a variável valorRealDolar, temos que libra é mais
+            'vantajosa em real, então a variável valorMaisBaixo recebe o valor de valorRealLibra.
+            
+            ws.Cells(i, 8).Value = Format(valorMaisBaixo, "Currency")
+            'Essa linha define o valor na célula da coluna H (coluna 8), da linha atual do loop
+            '(linha i) na planilha, bem como formata o valor mais baixo (convertido em reais) no
+            'formato da moeda.
+
+            If valorDolar < valorLibra Then
+                ws.Cells(i, 6).Interior.Color = RGB(0, 255, 0) ' Verde para Dólar
+            ElseIf valorLibra < valorDolar Then
+                ws.Cells(i, 7).Interior.Color = RGB(0, 255, 0) ' Verde para Libra
+            End If
+            'A parte final destaca a célula com valor mais baixo na cor verde, através de
+            'uma condicional. Se o dólar for mais baixo, a célula na coluna F (coluna 6) é
+            'destacada em verde, através da função interior.color (acessa a cor de fundo da
+            'célula, definindo-a de verde através do RGB). Caso contrário, se a libra for mais
+            'baixa, a célula na coluna G (coluna 7) é que vai ser destacada em verde.
+        End If
+        On Error GoTo 0
+        'Desativa o tratamento de erro.
+    Next i
+    'Final da iteração do loop e preparação para a próxima iteração.'
+End Sub
